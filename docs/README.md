@@ -1,6 +1,6 @@
 ### Dependencies
 ```bash
-    pip3 install sphinx recommonmark
+    pip3 install sphinx recommonmark sphinx-rtd-theme
 ```
 
 ### Syntax
