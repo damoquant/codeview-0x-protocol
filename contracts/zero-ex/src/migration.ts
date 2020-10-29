@@ -1,4 +1,5 @@
 import { SupportedProvider } from '@0x/subproviders';
+import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import { TxData } from 'ethereum-types';
 import * as _ from 'lodash';
 
@@ -7,6 +8,7 @@ import {
     FullMigrationContract,
     InitialMigrationContract,
     IZeroExContract,
+    LimitOrdersFeatureContract,
     MetaTransactionsFeatureContract,
     OwnableFeatureContract,
     SignatureValidatorFeatureContract,
@@ -90,14 +92,32 @@ export interface FullFeatures extends BootstrapFeatures {
     transformERC20: string;
     signatureValidator: string;
     metaTransactions: string;
+    limitOrders: string;
 }
 
 /**
- * Extra configuration options for a full migration of the Exchange Proxy.
+ * Configuration for deploying full features..
  */
-export interface FullMigrationOpts {
-    transformerDeployer: string;
+export interface FullFeaturesDeployConfig {
+    zeroExAddress: string;
+    wethAddress: string;
+    stakingAddress: string;
+    protocolFeeMultiplier: number | BigNumber;
 }
+
+/**
+ * Configuration options for a full migration of the Exchange Proxy.
+ */
+export interface FullMigrationConfig extends FullFeaturesDeployConfig {
+    transformerDeployer?: string;
+}
+
+const DEFAULT_FULL_FEATURES_DEPLOY_CONFIG = {
+    zeroExAddress: NULL_ADDRESS,
+    wethAddress: NULL_ADDRESS,
+    stakingAddress: NULL_ADDRESS,
+    protocolFeeMultiplier: 70e3,
+};
 
 /**
  * Deploy all the features for a full Exchange Proxy.
@@ -105,9 +125,10 @@ export interface FullMigrationOpts {
 export async function deployFullFeaturesAsync(
     provider: SupportedProvider,
     txDefaults: Partial<TxData>,
-    zeroExAddress: string,
+    config: Partial<FullFeaturesDeployConfig> = {},
     features: Partial<FullFeatures> = {},
 ): Promise<FullFeatures> {
+    const _config = { ...DEFAULT_FULL_FEATURES_DEPLOY_CONFIG, ...config };
     return {
         ...(await deployBootstrapFeaturesAsync(provider, txDefaults)),
         tokenSpender:
@@ -141,7 +162,19 @@ export async function deployFullFeaturesAsync(
                 provider,
                 txDefaults,
                 artifacts,
-                zeroExAddress,
+                _config.zeroExAddress,
+            )).address,
+        limitOrders:
+            features.limitOrders ||
+            (await LimitOrdersFeatureContract.deployFrom0xArtifactAsync(
+                artifacts.LimitOrdersFeature,
+                provider,
+                txDefaults,
+                artifacts,
+                _config.zeroExAddress,
+                _config.wethAddress,
+                _config.stakingAddress,
+                _config.protocolFeeMultiplier,
             )).address,
     };
 }
@@ -154,7 +187,7 @@ export async function fullMigrateAsync(
     provider: SupportedProvider,
     txDefaults: Partial<TxData>,
     features: Partial<FullFeatures> = {},
-    opts: Partial<FullMigrationOpts> = {},
+    config: Partial<FullMigrationConfig> = {},
 ): Promise<IZeroExContract> {
     const migrator = await FullMigrationContract.deployFrom0xArtifactAsync(
         artifacts.FullMigration,
@@ -170,11 +203,12 @@ export async function fullMigrateAsync(
         artifacts,
         await migrator.getBootstrapper().callAsync(),
     );
-    const _features = await deployFullFeaturesAsync(provider, txDefaults, zeroEx.address, features);
-    const _opts = {
+    const _config = { ...config, zeroExAddress: zeroEx.address };
+    const _features = await deployFullFeaturesAsync(provider, txDefaults, _config, features);
+    const migrateOpts = {
         transformerDeployer: txDefaults.from as string,
-        ...opts,
+        ..._config,
     };
-    await migrator.initializeZeroEx(owner, zeroEx.address, _features, _opts).awaitTransactionSuccessAsync();
+    await migrator.migrateZeroEx(owner, zeroEx.address, _features, migrateOpts).awaitTransactionSuccessAsync();
     return new IZeroExContract(zeroEx.address, provider, txDefaults);
 }

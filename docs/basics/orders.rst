@@ -2,11 +2,7 @@
 Orders
 ######
 
-An order is a message passed into the 0x Protocol to facilitate an ERC20->ERC20 trade. There are currently two types of orders in 0x V4: Limit, RFQ.
-
-
-.. note::
-    As of v4 of the protocol, the maker address is no longer explicitly defined in limit orders. The maker is instead recovered from the signature of the order's EIP712 hash.
+An order is a message passed into the 0x Protocol to facilitate an ERC20->ERC20 trade. There are currently two types of orders in 0x V4: **Limit** and **RFQ**.
 
 .. note::
     0x Orders currently support the exchange of ERC20 Tokens. Other asset classes, like ERC721,
@@ -22,48 +18,45 @@ Structure
 
 The ``LimitOrder`` struct has the following fields:
 
-+------------------+-------------+-----------------------------------------------------------------------------+
-| Field            | Type        | Description                                                                 |
-+==================+=============+=============================================================================+
-| ``makerToken``   | ``address`` | The ERC20 token the maker is selling and the maker is selling to the taker. |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``takerToken``   | ``address`` | The ERC20 token the taker is selling and the taker is selling to the maker. |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``makerAmount``  | ``uint128`` | The amount of makerToken being sold by the maker.                           |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``takerAmount``  | ``uint128`` | The amount of takerToken being sold by the taker.                           |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``feeRecipient`` | ``address`` | Recipient of maker token or taker token fees (if non-zero).                 |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``feeAmount``    | ``uint128`` | Amount of takerToken paid by the taker to the feeRecipient.                 |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``taker``        | ``address`` | Allowed taker address. Set to zero to allow any taker.                      |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``sender``       | ``address`` | Allowed address to directly call ``fillLimitOrder()`` (``msg.sender``).     |
-|                  |             | This is distinct from ``taker`` in meta-transactions.                       |
-|                  |             | Set to zero to allow any caller.                                            |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``pool``         | ``uint256`` | The staking pool to attribute the 0x protocol fee from this order.          |
-|                  |             | Set to zero to attribute to the default pool, not owned by anyone.          |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``expiry``       | ``uint64``  | The Unix timestamp in seconds when this order expires.                      |
-+------------------+-------------+-----------------------------------------------------------------------------+
-| ``salt``         | ``uint256`` | Arbitrary number to enforce uniqueness of the order's hash.                 |
-+------------------+-------------+-----------------------------------------------------------------------------+
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| Field                    | Type        | Description                                                                 |
++==========================+=============+=============================================================================+
+| ``makerToken``           | ``address`` | The ERC20 token the maker is selling and the maker is selling to the taker. |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``takerToken``           | ``address`` | The ERC20 token the taker is selling and the taker is selling to the maker. |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``makerAmount``          | ``uint128`` | The amount of makerToken being sold by the maker.                           |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``takerAmount``          | ``uint128`` | The amount of takerToken being sold by the taker.                           |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``feeRecipient``         | ``address`` | Recipient of maker token or taker token fees (if non-zero).                 |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``takerTokenFeeAmount``  | ``uint128`` | Amount of takerToken paid by the taker to the feeRecipient.                 |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``maker``                | ``address`` | The address of the maker, and signer, of this order.                        |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``taker``                | ``address`` | Allowed taker address. Set to zero to allow any taker.                      |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``sender``               | ``address`` | Allowed address to directly call ``fillLimitOrder()`` (``msg.sender``).     |
+|                          |             | This is distinct from ``taker`` in meta-transactions.                       |
+|                          |             | Set to zero to allow any caller.                                            |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``pool``                 | ``bytes32`` | The staking pool to attribute the 0x protocol fee from this order.          |
+|                          |             | Set to zero to attribute to the default pool, not owned by anyone.          |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``expiry``               | ``uint64``  | The Unix timestamp in seconds when this order expires.                      |
++--------------------------+-------------+-----------------------------------------------------------------------------+
+| ``salt``                 | ``uint256`` | Arbitrary number to enforce uniqueness of the order's hash.                 |
++--------------------------+-------------+-----------------------------------------------------------------------------+
 
 Hashing limit orders
 --------------------
 
-There are two hashes associated with limit orders: the signature hash and the fill hash. The signature hash is what gets signed during the signing step. The fill hash is the hash used to uniquely identify an order inside the protocol and can be considered the "canonical" hash of the order.
-
-Computing the signature hash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The signature hash is the hash of the order struct, following the `EIP712 spec <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md>`_. In solidity, the signature hash is computed as:
+The hash of the order is used to uniquely identify an order inside the protocol. It is computed following the `EIP712 spec <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md>`_ standard. In solidity, the hash is computed as:
 
 .. code-block:: solidity
 
-    bytes32 signatureHash = keccak256(abi.encodePacked(
+    bytes32 orderHash = keccak256(abi.encodePacked(
         '\x19\x01',
         // The domain separator.
         keccak256(abi.encode(
@@ -90,11 +83,12 @@ The signature hash is the hash of the order struct, following the `EIP712 spec <
                 'address takerToken,',
                 'uint128 makerAmount,',
                 'uint128 takerAmount,',
-                'address feeRecipient,',
-                'uint128 feeAmount,',
+                'uint128 takerTokenFeeAmount,',
                 'address taker,',
+                'address maker,',
                 'address sender,',
-                'uint256 pool,',
+                'address feeRecipient,',
+                'bytes32 pool,',
                 'uint64 expiry,',
                 'uint256 salt)'
             )),
@@ -103,34 +97,22 @@ The signature hash is the hash of the order struct, following the `EIP712 spec <
             order.takerToken,
             order.makerAmount,
             order.takerAmount,
-            order.feeRecipient,
-            order.feeAmount,
+            order.takerTokenFeeAmount,
+            order.maker,
             order.taker,
             order.sender,
+            order.feeRecipient,
             order.pool,
             order.expiry,
             order.salt
         ))
     ));
 
-Computing the fill hash
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The fill hash simply hashes the previous signature hash with the maker's address, which can be recovered from the order's signature if not already known.
+Alternatively, the Exchange Proxy contract can be used to retrieve the hash given an order.
 
 .. code-block:: solidity
 
-    // For EthSign signatures, the signatureHash would need to be replaced with
-    // keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", signatureHash))
-    address makerAddress = ecrecover(signatureHash, signature.v, signature.r, signature.s);
-    bytes32 fillHash = keccak256(abi.encode(signatureHash, makerAddress));
-
-Alternatively, the Exchange Proxy contract can be used to retrieve these hashes given an order and signature.
-
-.. code-block:: solidity
-
-    bytes32 signatureHash = IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF).getLimitOrderSignatureHash(order);
-    bytes32 fillHash = IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF).getLimitOrderFillHash(order, signature);
+    bytes32 orderHash = IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF).getLimitOrderHash(order);
 
 Signing limit orders
 --------------------
@@ -156,7 +138,6 @@ There are two types of signatures supported: ``EIP712`` and ``EthSign``.
 In both cases, the ``@0x/order-utils`` package simplifies generating these signatures.
 
 .. code-block:: javascript
-   :linenos:
 
    const orderUtils = require('@0x/order-utils');
    const order = new orderUtils.LimitOrder({
@@ -185,12 +166,12 @@ Limit orders can be filled with the ``fillLimitOrder()`` or ``fillOrKillLimitOrd
         // The signature
         Signature calldata signature,
         // How much taker token to fill the order with
-        uint256 takerTokenFillAmount
+        uint128 takerTokenFillAmount
     )
         external
         payable
         // How much maker token from the order the taker received.
-        returns (uint256 makerTokenFillAmount);
+        returns (uint128 takerTokenFillAmount, uint128 makerTokenFillAmount);
 
 ``fillOrKillLimitOrder()`` fills a single limit order for **exactly** ``takerTokenFillAmount``:
 
@@ -202,17 +183,17 @@ Limit orders can be filled with the ``fillLimitOrder()`` or ``fillOrKillLimitOrd
         // The signature
         Signature calldata signature,
         // How much taker token to fill the order with
-        uint256 takerTokenFillAmount
+        uint128 takerTokenFillAmount
     )
         external
         payable
         // How much maker token from the order the taker received.
-        returns (uint256 makerTokenFillAmount);
+        returns (uint128 makerTokenFillAmount);
 
 Cancelling a limit order
 ------------------------
 
-Because there is no way to un-sign an order that has been distributed, limit orders must be cancelled on-chain through ``cancelLimitOrder()``, ``batchCancelLimitOrders()`` or ``cancelLimitOrdersUpTo()`` functions. They can only be called by the order's maker.
+Because there is no way to un-sign an order that has been distributed, limit orders must be cancelled on-chain through one of several functions. They can only be called by the order's maker.
 
 ``cancelLimitOrder()`` cancels a single limit order created by the caller:
 
@@ -234,12 +215,25 @@ Because there is no way to un-sign an order that has been distributed, limit ord
     )
         external;
 
-``cancelLimitOrdersUpTo()`` will cancel limit orders created by the caller with a ``salt`` field <= the value provided. Subsequent calls to this function must provide a ``salt`` >= the last call to succeed.
+``cancelPairOrdersUpTo()`` will cancel all limit and RFQ orders created by the caller with with a maker and taker token pair and a ``salt`` field < the ``salt`` provided. Subsequent calls to this function with the same tokens must provide a ``salt`` >= the last call to succeed.
 
 .. code-block:: solidity
 
-    function cancelLimitOrdersUpTo(
+    function cancelPairOrdersUpTo(
+        address makerToken,
+        address takerToken,
         uint256 salt;
+    )
+        external;
+
+``batchCancelPairOrdersUpTo()`` performs multiple ``cancelPairOrdersUpTo()`` at once. Each respective index across arrays is equivalent to a single call.
+
+.. code-block:: solidity
+
+    function batchCancelPairOrdersUpTo(
+        address[] makerTokens,
+        address[] takerTokens,
+        uint256[] salts;
     )
         external;
 
@@ -251,26 +245,24 @@ The Exchange Proxy exposes a function ``getLimitOrderInfo()`` to query informati
 .. code-block:: solidity
 
     enum OrderState {
-        INVALID,
         CANCELLED,
-        FILLABLE,
-        FILLED
+        EXPIRED,
+        FILLED,
+        FILLABLE
     }
 
     struct OrderInfo {
-        // The fill hash.
-        bytes32 fillHash;
+        // The order hash.
+        bytes32 orderHash;
         // Current state of the order.
         OrderState state;
         // How much taker token has been filled in the order.
-        uint256 takerTokenFilledAmount;
+        uint128 takerTokenFilledAmount;
     }
 
     function getLimitOrderInfo(
         // The order
-        LimitOrder calldata order,
-        // The signature
-        Signature calldata signature
+        LimitOrder calldata order
     )
         external
         view
@@ -303,9 +295,11 @@ The ``RFQOrder`` struct has the following fields:
 +-----------------+-------------+-----------------------------------------------------------------------------+
 | ``takerAmount`` | ``uint128`` | The amount of takerToken being sold by the taker.                           |
 +-----------------+-------------+-----------------------------------------------------------------------------+
+| ``maker``       | ``address`` | The address of the maker, and signer, of this order.                        |
++-----------------+-------------+-----------------------------------------------------------------------------+
 | ``txOrigin``    | ``address`` | The allowed address of the EOA that submitted the Ethereum transaction.     |
 +-----------------+-------------+-----------------------------------------------------------------------------+
-| ``pool``        | ``uint256`` | The staking pool to attribute the 0x protocol fee from this order.          |
+| ``pool``        | ``bytes32`` | The staking pool to attribute the 0x protocol fee from this order.          |
 |                 |             | Set to zero to attribute to the default pool, not owned by anyone.          |
 +-----------------+-------------+-----------------------------------------------------------------------------+
 | ``expiry``      | ``uint64``  | The Unix timestamp in seconds when this order expires.                      |
@@ -316,16 +310,11 @@ The ``RFQOrder`` struct has the following fields:
 Hashing RFQ orders
 ------------------
 
-There are two hashes associated with RFQ orders: the signature hash and the fill hash. The signature hash is what gets signed during the signing step. The fill hash is the hash used to uniquely identify an order inside the protocol and can be considered the "canonical" hash of the order.
-
-Computing the signature hash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The signature hash is the hash of the order struct, following the `EIP712 spec <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md>`_. In solidity, the signature hash is computed as:
+The hash of the order is used to uniquely identify an order inside the protocol. It is computed following the `EIP712 spec <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md>`_ standard. In solidity, the hash is computed as:
 
 .. code-block:: solidity
 
-    bytes32 signatureHash = keccak256(abi.encodePacked(
+    bytes32 orderHash = keccak256(abi.encodePacked(
         '\x19\x01',
         // The domain separator.
         keccak256(abi.encode(
@@ -352,8 +341,9 @@ The signature hash is the hash of the order struct, following the `EIP712 spec <
                 'address takerToken,',
                 'uint128 makerAmount,',
                 'uint128 takerAmount,',
+                'address maker,'
                 'address txOrigin,'
-                'uint256 pool,',
+                'bytes32 pool,',
                 'uint64 expiry,',
                 'uint256 salt)'
             )),
@@ -362,6 +352,7 @@ The signature hash is the hash of the order struct, following the `EIP712 spec <
             order.takerToken,
             order.makerAmount,
             order.takerAmount,
+            order.maker,
             order.txOrigin,
             order.pool,
             order.expiry,
@@ -369,32 +360,11 @@ The signature hash is the hash of the order struct, following the `EIP712 spec <
         ))
     ));
 
-Computing the fill hash
-^^^^^^^^^^^^^^^^^^^^^^^
-
-The fill hash simply hashes the previous signature hash with the maker's address, which can be recovered from the order's signature if not already known.
+Alternatively, the Exchange Proxy contract can be used to retrieve the hash given an order.
 
 .. code-block:: solidity
 
-    // For EthSign signatures, the signatureHash would need to be replaced with
-    // keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", signatureHash))
-    address makerAddress = ecrecover(
-        keccak256(abi.encodePacked(
-            '\x19Ethereum Signed Message:\n32',
-            signatureHash
-        )),
-        signature.v,
-        signature.r,
-        signature.s
-    );
-    bytes32 fillHash = keccak256(abi.encode(signatureHash, makerAddress));
-
-Alternatively, the Exchange Proxy contract can be used to retrieve these hashes given an order and signature.
-
-.. code-block:: solidity
-
-    bytes32 signatureHash = IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF).getRfqOrderSignatureHash(order);
-    bytes32 fillHash = IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF).getRfqOrderFillHash(order, signature);
+    bytes32 orderHash = IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF).getLimitOrderHash(order);
 
 Signing RFQ orders
 ------------------
@@ -414,7 +384,6 @@ The protocol accepts signatures defined by the following struct:
 The ``@0x/order-utils`` node package simplifies the process of creating a valid signature object.
 
 .. code-block:: javascript
-   :linenos:
 
    const orderUtils = require('@0x/order-utils');
    const order = new orderUtils.RfqOrder({
@@ -439,12 +408,12 @@ RFQ orders can be filled with the ``fillRfqOrder()`` or ``fillOrKillRfqOrder()``
         // The signature
         Signature calldata signature,
         // How much taker token to fill the order with
-        uint256 takerTokenFillAmount
+        uint128 takerTokenFillAmount
     )
         external
         payable
         // How much maker token from the order the taker received.
-        returns (uint256 makerTokenFillAmount);
+        returns (uint128 takerTokenFillAmount, uint128 makerTokenFillAmount);
 
 ``fillOrKillRfqOrder()`` fills a single RFQ order for **exactly** ``takerTokenFillAmount``:
 
@@ -456,17 +425,17 @@ RFQ orders can be filled with the ``fillRfqOrder()`` or ``fillOrKillRfqOrder()``
         // The signature
         Signature calldata signature,
         // How much taker token to fill the order with
-        uint256 takerTokenFillAmount
+        uint128 takerTokenFillAmount
     )
         external
         payable
         // How much maker token from the order the taker received.
-        returns (uint256 makerTokenFillAmount);
+        returns (uint128 makerTokenFillAmount);
 
 Cancelling an RFQ order
 -----------------------
 
-Similar to limit orders, RFQ orders can be cancelled on-chain through ``cancelRfqOrder()`` or ``batchCancelRfqOrders()`` (but there is no ``...UpTo()`` variant). Both can only be called by the order's maker.
+Similar to limit orders, RFQ orders can be cancelled on-chain through a variety of functions, which can only be called by the order's maker.
 
 ``cancelRfqOrder()`` cancels a single RFQ order created by the caller:
 
@@ -488,6 +457,28 @@ Similar to limit orders, RFQ orders can be cancelled on-chain through ``cancelRf
     )
         external;
 
+``cancelPairOrdersUpTo()`` will cancel all limit and RFQ orders created by the caller with with a maker and taker token pair and a ``salt`` field < the ``salt`` provided. Subsequent calls to this function with the same tokens must provide a ``salt`` >= the last call to succeed.
+
+.. code-block:: solidity
+
+    function cancelPairOrdersUpTo(
+        address makerToken,
+        address takerToken,
+        uint256 salt;
+    )
+        external;
+
+``batchCancelPairOrdersUpTo()`` performs multiple ``cancelPairOrdersUpTo()`` at once. Each respective index across arrays is equivalent to a single call.
+
+.. code-block:: solidity
+
+    function batchCancelPairOrdersUpTo(
+        address[] makerTokens,
+        address[] takerTokens,
+        uint256[] salts;
+    )
+        external;
+
 Getting the status of an RFQ order
 ----------------------------------
 
@@ -496,26 +487,24 @@ The Exchange Proxy exposes a function ``getRfqOrderInfo()`` to query information
 .. code-block:: solidity
 
     enum OrderState {
-        INVALID,
         CANCELLED,
-        FILLABLE,
-        FILLED
+        EXPIRED,
+        FILLED,
+        FILLABLE
     }
 
     struct OrderInfo {
-        // The fill hash.
-        bytes32 fillHash;
+        // The order hash.
+        bytes32 orderHash;
         // Current state of the order.
         OrderState state;
         // How much taker token has been filled in the order.
-        uint256 takerTokenFilledAmount;
+        uint128 takerTokenFilledAmount;
     }
 
     function getRfqOrderInfo(
         // The order
-        RfqOrder calldata order,
-        // The signature
-        Signature calldata signature
+        RfqOrder calldata order
     )
         external
         view
