@@ -2,48 +2,15 @@
 Events
 ###############################
 
-This page describes 0x events that are emitted when interacting with the Exchange Proxy.
-For a complete list of events emitted by Exchange V3, see the `V3 Spec <https://github.com/0xProject/0x-protocol-specification/blob/master/v3/v3-specification.md#events>`_.
+This page defines 0x events emitted when interacting with the Exchange Proxy. The diagram below
+illustrates how events are emitted when trading through the Exchange Proxy.
 
-Currently Deployed Fill Events
-==============================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Fill Events In Exchange V4
-==========================
-
-
+.. warning::
+    There are pending upgrades that impact these events. Please see the `Releases <../additional/releases.html>`_ page for more details.
 
 
 .. image:: ../_static/img/events.png
-    :scale: 30%
-
-
-
-
-
-
-
-
-
-
+    :scale: 42%
 
 
 Event Catalogue
@@ -51,48 +18,46 @@ Event Catalogue
 
 This is a complete catalogue of 0x events emitted when interacting with the Exchange Proxy system of contracts.
 
+.. note::
+    This catalogue does not include events emitted by tokens or other exchanges, like Uniswap. It also only lists 0x V3 events
+    that are emitted during a Fill; for an extensive list of V3 events, see the `V3 Spec <https://github.com/0xProject/0x-protocol-specification/blob/master/v3/v3-specification.md#events>`_.
+
 .. _Deployed: #id1
 .. _ERC20BridgeTransfer: #id2
 .. _Fill: #id3
-.. _LimitOrderFilled: #id4
-.. _MetaTransactionExecuted: #id5
-.. _Migrated: #id6
-.. _ProtocolFeeUnfunded: #id7
-.. _ProxyFunctionUpdated: #id8
-.. _QuoteSignerUpdated: #id9
-.. _RfqOrderFilled: #id10
-.. _TransformedERC20: #id11
-.. _TransformerMetadata: #id12
+.. _MetaTransactionExecuted: #id4
+.. _Migrated: #id5
+.. _ProtocolFeeUnfunded: #id6
+.. _ProxyFunctionUpdated: #id7
+.. _QuoteSignerUpdated: #id8
+.. _TransformedERC20: #id9
+.. _TransformerMetadata: #id10
 
 
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| Event                   | Description                                                                          | Emitted By    | In Production |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| Deployed_               | Emitted when a contract is deployed for use by the Exchange Proxy.                   | ExchangeProxy | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| ERC20BridgeTransfer_    | Emitted when a trade occurs.                                                         | FlashWallet   | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| Fill_                   | Emitted by Exchange V3 when an order is filled.                                      | Exchange V3   | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| LimitOrderFilled_       | Emitted when a V4 Limit order is filled. This is not yet released.                   | ExchangeProxy | No            |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| MetaTransactionExecuted_| Emitted when a meta-transaction is executed on the Exchange Proxy.                   | ExchangeProxy | Yes           |
-|                         | Note that this differs from meta-transactions that are executed on Exchange V3.      |               |               |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| Migrated_               | Emitted when `ExchangeProxy.migrate()` is called.                                    | ExchangeProxy | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| ProtocolFeeUnfunded_    | Emitted when an order is skipped due to a lack of funds to pay the 0x Protocol fee.  | FlashWallet   | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| ProxyFunctionUpdated_   | Emitted when a function is upgraded via `extend()` or `rollback()`                   | ExchangeProxy | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| QuoteSignerUpdated_     | Emitted when `ExchangeProxy.setQuoteSigner()` is called.                             | ExchangeProxy | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| RfqOrderFilled_         | Emitted when a V4 RFQ order is filled. This is not yet released.                     | ExchangeProxy | No            |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| TransformedERC20_       | Emitted when the Transformer Deployer is upgraded.                                   | FlashWallet   | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
-| TransformerMetadata_    | A general, customizable event emitted that can be emitted by transformers as-needed. | FlashWallet   | Yes           |
-+-------------------------+--------------------------------------------------------------------------------------+---------------+---------------+
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| Event                   | Description                                                                          | Emitted By    |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| Deployed_               | Emitted when a contract is deployed for use by the Exchange Proxy.                   | ExchangeProxy |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| ERC20BridgeTransfer_    | Emitted when a trade occurs.                                                         | FlashWallet   |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| Fill_                   | Emitted by Exchange V3 when an order is filled.                                      | Exchange V3   |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| MetaTransactionExecuted_| Emitted when a meta-transaction is executed on the Exchange Proxy.                   | ExchangeProxy |
+|                         | Note that this differs from meta-transactions that are executed on Exchange V3.      |               |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| Migrated_               | Emitted when `ExchangeProxy.migrate()` is called.                                    | ExchangeProxy |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| ProtocolFeeUnfunded_    | Emitted when an order is skipped due to a lack of funds to pay the 0x Protocol fee.  | FlashWallet   |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| ProxyFunctionUpdated_   | Emitted when a function is upgraded via `extend()` or `rollback()`                   | ExchangeProxy |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| QuoteSignerUpdated_     | Emitted when `ExchangeProxy.setQuoteSigner()` is called.                             | ExchangeProxy |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| TransformedERC20_       | Emitted when the Transformer Deployer is upgraded.                                   | FlashWallet   |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
+| TransformerMetadata_    | A general, customizable event emitted that can be emitted by transformers as-needed. | FlashWallet   |
++-------------------------+--------------------------------------------------------------------------------------+---------------+
 
 Deployed
 --------
