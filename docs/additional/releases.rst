@@ -4,7 +4,7 @@ Releases
 
 This page outlines upcoming releases and expected changes.
 
-November 12th, 2020
+Tinker (Est November 12th, 2020)
 -------------------
 
 - Upgrade features to allow allowances set on the ExhcangeProxy contract. This will fallback to the Allowance Target.
@@ -22,18 +22,18 @@ November 12th, 2020
     );
 
 
-November 17th, 2020 #1
+Tailor (Est November 17th, 2020 #1)
 ----------------------
 
 - Deploy feature that implements V4 Limit and RFQ orders (see the `Orders Page <../basics/orders.html>`_).
   This enables us to fill V4 limit orders through the Exchange Proxy, but does not yet allow aggregation.
 - New events will be introduced; they will be shared once finalized.
 
-November 17th, 2020 #2
+Soldier (Est November 17th, 2020 #2
 ----------------------
 - New PLP's. At this point, PLP instances will no longer emit `ERC20BridgeTransfer` events.
 
-November 24th, 2020
+Spy (Est November 24th, 2020)
 -------------------
 - A new transformer (like FillQuoteTransformer) that aggregates V4 orders instead of forwarding to Exchange V3.
 - This enables us to run simbot trials against V4 before the external audit begins.
