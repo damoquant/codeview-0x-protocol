@@ -36,7 +36,15 @@ Tinker
 
 Tailor
 ------
+- New PLP's (Remora & Ahab). At this point, PLP instances will no longer emit `ERC20BridgeTransfer` events.
 
+.. image:: ../_static/img/tailor_events2.png
+    :scale: 42%
+
+
+
+Soldier
+-------
 - Deploy feature that implements V4 Limit and RFQ orders (see the `Orders Page <../basics/orders.html>`_).
   This enables us to fill V4 limit orders through the Exchange Proxy, but does not yet allow aggregation.
 - New events will be introduced.  The proposed events are below.
@@ -100,11 +108,8 @@ Tailor
         uint256 minValidSalt
     );
 
-
-Soldier
--------
-- New PLP's (Remora & Ahab). At this point, PLP instances will no longer emit `ERC20BridgeTransfer` events.
-
+.. image:: ../_static/img/soldier_events.png
+    :scale: 42%
 
 
 Sailor
@@ -113,3 +118,6 @@ Sailor
 - This enables us to run simbot trials against V4 before the external audit begins.
 - WE DO NOT expect teams to be upgraded to V4 at this point; they can continue using the existing FillQuoteTransformer.
   At this point teams can begin testing their V4 tooling.
+
+.. image:: ../_static/img/sailor_events2.png
+    :scale: 42%
