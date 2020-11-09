@@ -33,7 +33,7 @@ Soldier (Est November 17th, 2020 #2
 ----------------------
 - New PLP's. At this point, PLP instances will no longer emit `ERC20BridgeTransfer` events.
 
-Spy (Est November 24th, 2020)
+Sailor (Est November 24th, 2020)
 -------------------
 - A new transformer (like FillQuoteTransformer) that aggregates V4 orders instead of forwarding to Exchange V3.
 - This enables us to run simbot trials against V4 before the external audit begins.
