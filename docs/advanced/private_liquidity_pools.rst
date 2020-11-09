@@ -1,3 +1,3 @@
 ###############################
-Private Liquidity Poools
+Pluggable Liquidity (PLP)
 ###############################
