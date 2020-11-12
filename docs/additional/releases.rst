@@ -7,7 +7,7 @@ This page outlines upcoming releases and expected changes.
 +-------------+----------------------+-----------------------------------------+
 | **Release** | **Est Release Date** | **Status**                              |
 +-------------+----------------------+-----------------------------------------+
-| `Tinker`_   | 11/12/20             | Deployed and timelocked until 11/12/20. |
+| `Tinker`_   | 11/12/20             | Deployed and timelocked until 11/13/20. |
 +-------------+----------------------+-----------------------------------------+
 | `Tailor`_   | 11/17/20             | In audits.                              |
 +-------------+----------------------+-----------------------------------------+
@@ -35,7 +35,7 @@ Tinker
 
 Tailor
 ------
-- New PLP's (Remora & Ahab). At this point, PLP instances will no longer emit `ERC20BridgeTransfer` events.
+- PLP instances will no longer emit `ERC20BridgeTransfer` events.
 
 .. image:: ../_static/img/tailor_events2.png
     :scale: 42%
