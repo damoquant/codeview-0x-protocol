@@ -57,6 +57,7 @@ Contents
    additional/audits.rst
    additional/bounties.rst
    additional/contributing.rst
+   additional/exceptional_erc20s.rst
    additional/releases.rst
 
 
