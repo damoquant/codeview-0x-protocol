@@ -2,23 +2,26 @@
 Releases
 ###############################
 
+.. role:: strike
+    :class: strike
+
 This page outlines upcoming releases and expected changes.
 
 +-------------+----------------------+-----------------------------------------+
 | **Release** | **Est Release Date** | **Status**                              |
 +-------------+----------------------+-----------------------------------------+
-| `Tinker`_   | 11/12/20             | Deployed and timelocked until 11/13/20. |
+| `Tinker`_   | 11/12/20             | Deployed on 11/13/20.                   |
 +-------------+----------------------+-----------------------------------------+
-| `Tailor`_   | 11/17/20             | In audits.                              |
+| `Tailor`_   | 11/18/20             | In audits.                              |
 +-------------+----------------------+-----------------------------------------+
-| `Soldier`_  | 11/17/20             | Code review.                            |
+| `Soldier`_  | 12/07/20             | Code review.                            |
 +-------------+----------------------+-----------------------------------------+
-| `Sailor`_   | 11/24/20             | Under development.                      |
+| `Sailor`_   | 12/07/20             | Under development.                      |
 +-------------+----------------------+-----------------------------------------+
 Tinker
 ------
 
-- Upgrade features to allow allowances set on the ExhcangeProxy contract. This will fallback to the Allowance Target.
+- :strike:`Upgrade features to allow allowances set on the ExhcangeProxy contract. This will fallback to the Allowance Target.` (Moved to Sailor)
 - Deploy VIP PLP feature. This introduces a new event that is emitted by the Exchange Proxy when filling through the VIP PLP.
 
 .. code-block:: solidity
@@ -67,6 +70,8 @@ Soldier
         address takerToken,
         uint128 takerTokenFilledAmount,
         uint128 makerTokenFilledAmount,
+        uint128 takerFeeAmount,
+        uint128 protocolFeePaid,
         bytes32 pool
     );
 
@@ -85,6 +90,8 @@ Soldier
         address takerToken,
         uint128 takerTokenFilledAmount,
         uint128 makerTokenFilledAmount,
+        uint128 takerFeeAmount,
+        uint128 protocolFeePaid,
         bytes32 pool
     );
 
@@ -117,6 +124,7 @@ Sailor
 - This enables us to run simbot trials against V4 before the external audit begins.
 - WE DO NOT expect teams to be upgraded to V4 at this point; they can continue using the existing FillQuoteTransformer.
   At this point teams can begin testing their V4 tooling.
+- Upgrade features to allow allowances set on the ExhcangeProxy contract. This will fallback to the Allowance Target.
 
 .. image:: ../_static/img/sailor_events2.png
     :scale: 42%

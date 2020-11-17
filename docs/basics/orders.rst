@@ -11,7 +11,7 @@ An order is a message passed into the 0x Protocol to facilitate an ERC20->ERC20 
 Limit Orders
 ==============
 
-Limit orders are the standard 0x Order, which encodes a possible trade between a maker and taker at a fixed price. These orders are typically distributed via Mesh/SRA (open orderbook) or OTC, and can be filled through the ``fillOrder()`` function on the Exchange Proxy.
+Limit orders are the standard 0x Order, which encodes a possible trade between a maker and taker at a fixed price. These orders are typically distributed via Mesh/SRA (open orderbook) or OTC, and can be filled through the functions on the Exchange Proxy.
 
 Structure
 ---------
