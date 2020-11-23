@@ -209,7 +209,6 @@ contract NativeOrdersFeature is
     )
         public
         override
-        payable
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount)
     {
         FillNativeOrderResults memory results =
@@ -219,7 +218,6 @@ contract NativeOrdersFeature is
                 takerTokenFillAmount,
                 msg.sender
             );
-        _refundExcessProtocolFeeToSender(results.ethProtocolFeePaid);
         (takerTokenFilledAmount, makerTokenFilledAmount) = (
             results.takerTokenFilledAmount,
             results.makerTokenFilledAmount
@@ -279,7 +277,6 @@ contract NativeOrdersFeature is
     )
         public
         override
-        payable
         returns (uint128 makerTokenFilledAmount)
     {
         FillNativeOrderResults memory results =
@@ -297,7 +294,6 @@ contract NativeOrdersFeature is
                 takerTokenFillAmount
             ).rrevert();
         }
-        _refundExcessProtocolFeeToSender(results.ethProtocolFeePaid);
         makerTokenFilledAmount = results.makerTokenFilledAmount;
     }
 
@@ -356,7 +352,6 @@ contract NativeOrdersFeature is
     )
         public
         override
-        payable
         onlySelf
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount)
     {
@@ -367,7 +362,6 @@ contract NativeOrdersFeature is
                 takerTokenFillAmount,
                 taker
             );
-        _refundExcessProtocolFeeToSender(results.ethProtocolFeePaid);
         (takerTokenFilledAmount, makerTokenFilledAmount) = (
             results.takerTokenFilledAmount,
             results.makerTokenFilledAmount
@@ -789,8 +783,10 @@ contract NativeOrdersFeature is
             }
         }
 
-        // Pay the protocol fee.
-        results.ethProtocolFeePaid = _collectProtocolFee(params.order.pool);
+        // Pay the protocol fee if this is an open-orderbook order (taker is not known).
+        if (params.order.taker == address(0)) {
+            results.ethProtocolFeePaid = _collectProtocolFee(params.order.pool);
+        }
 
         // Settle between the maker and taker.
         (results.takerTokenFilledAmount, results.makerTokenFilledAmount) = _settleOrder(
@@ -883,9 +879,6 @@ contract NativeOrdersFeature is
             }
         }
 
-        // Pay the protocol fee.
-        results.ethProtocolFeePaid = _collectProtocolFee(order.pool);
-
         // Settle between the maker and taker.
         (results.takerTokenFilledAmount, results.makerTokenFilledAmount) = _settleOrder(
             SettleOrderInfo({
@@ -909,7 +902,6 @@ contract NativeOrdersFeature is
             address(order.takerToken),
             results.takerTokenFilledAmount,
             results.makerTokenFilledAmount,
-            results.ethProtocolFeePaid,
             order.pool
         );
     }
